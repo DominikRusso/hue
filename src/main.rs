@@ -1,3 +1,8 @@
+mod args;
+
+use structopt::StructOpt;
+
 fn main() {
-    println!("Hello, world!");
+    let subcommand = args::Subcommand::from_args();
+    println!("{:?}", subcommand);
 }
