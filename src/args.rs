@@ -2,7 +2,7 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 pub enum Subcommand {
-    Pair {
+    Init {
         username: String,
     },
     On {
