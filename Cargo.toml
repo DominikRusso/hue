@@ -10,3 +10,4 @@ edition = "2021"
 [dependencies]
 huelib = "0.13.2"
 structopt = "0.3.25"
+xdg = "2.4.0"
