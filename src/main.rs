@@ -21,8 +21,12 @@ fn main() {
         }
         Subcommand::On { lights } => {
             let bridge = login();
+            power(bridge, lights, true);
         }
-        Subcommand::Off { lights } => {}
+        Subcommand::Off { lights } => {
+            let bridge = login();
+            power(bridge, lights, false);
+        }
         Subcommand::Brightness { brightness, lights } => {}
         Subcommand::Color { color, lights } => {}
         Subcommand::Scene { name } => {}
@@ -110,4 +114,17 @@ fn login() -> Bridge {
     };
 
     Bridge::new(ip, username)
+}
+
+fn power(bridge: Bridge, lights: Vec<String>, on: bool) {
+    let state_transform = huelib::resource::light::StateModifier::new().with_on(on);
+    if lights.is_empty() {
+        // turn all lights on
+        let lights = bridge.get_all_lights().expect("Failed to get lights.");
+        for light in lights {
+            bridge.set_light_state(light.id, &state_transform).unwrap();
+        }
+    } else {
+        unimplemented!()
+    }
 }
