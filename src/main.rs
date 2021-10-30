@@ -47,12 +47,17 @@ fn init(username: &str) -> Result<(), huelib::Error> {
             Ok(user) => {
                 dbg!(&user);
                 let xdg_dirs = BaseDirectories::with_prefix("hue").unwrap();
-                let data_path = xdg_dirs
+                let username_path = xdg_dirs
                     .place_data_file("username")
                     .expect("Couldn't create data directory.");
-                let mut data_file = File::create(data_path)?;
+                let bridge_path = xdg_dirs
+                    .place_data_file("bridge")
+                    .expect("Couldn't create data directory.");
+                let mut username_file = File::create(username_path)?;
+                let mut bridge_file = File::create(bridge_path)?;
                 use std::io::Write;
-                write!(data_file, "{}", user).unwrap();
+                write!(username_file, "{}", user).unwrap();
+                write!(bridge_file, "{}", ip).unwrap();
                 break;
             }
             Err(Error::Response(ResponseError { kind, .. })) if kind == LinkButtonNotPressed => {
