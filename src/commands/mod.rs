@@ -79,12 +79,30 @@ pub fn power(lights: Vec<String>, power_state: PowerState) {
     apply_transform(lights, state_transform);
 }
 
-pub fn brightness(lights: Vec<String>, brightness: &str) {
-    // TODO parse +/- prefix
-    let brightness = Adjust::Override(brightness.parse().expect("Failed to parse brightness."));
+pub fn brightness(lights: Vec<String>, brightness: String) {
+    let prefix;
+    let value;
+    if brightness.starts_with("+") || brightness.starts_with("-") {
+        prefix = Some(brightness.chars().next().unwrap());
+        value = brightness[1..].to_string();
+    } else {
+        prefix = None;
+        value = brightness;
+    }
+
+    let value = value.parse::<u8>().expect("Failed to parse brightness.");
+    let value = ((value as f32 / 100.0) * 255.0) as u8;
+
+    let brightness_transform = match prefix {
+        Some('+') => Adjust::Increment(value),
+        Some('-') => Adjust::Decrement(value),
+        None => Adjust::Override(value),
+        _ => unreachable!(),
+    };
+
     let state_transform = StateModifier::new()
         .with_on(true)
-        .with_brightness(brightness);
+        .with_brightness(brightness_transform);
     apply_transform(lights, state_transform);
 }
 

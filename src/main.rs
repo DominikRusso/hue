@@ -21,7 +21,7 @@ fn main() {
             commands::power(lights, PowerState::Off);
         }
         Subcommand::Brightness { brightness, lights } => {
-            commands::brightness(lights, &brightness);
+            commands::brightness(lights, brightness);
         }
         Subcommand::Color { color, lights } => {}
         Subcommand::Scene { name } => {}
