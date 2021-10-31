@@ -1,3 +1,4 @@
+use structopt::clap::AppSettings;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -11,7 +12,7 @@ pub enum Subcommand {
     Off {
         lights: Vec<String>,
     },
-    #[structopt(alias = "bri")]
+    #[structopt(alias = "bri", settings = &[AppSettings::AllowNegativeNumbers])]
     Brightness {
         brightness: String,
         lights: Vec<String>,
