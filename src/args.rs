@@ -13,7 +13,7 @@ pub enum Subcommand {
     },
     #[structopt(alias = "bri")]
     Brightness {
-        brightness: u8,
+        brightness: String,
         lights: Vec<String>,
     },
     #[structopt(alias = "col")]

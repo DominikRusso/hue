@@ -2,6 +2,7 @@ mod args;
 
 use args::Subcommand;
 use huelib::bridge::Bridge;
+use huelib::resource::{light::StateModifier, Adjust};
 use std::env;
 use std::fs::{self, File};
 use std::net::IpAddr;
@@ -13,7 +14,6 @@ static ENV_USER: &str = "HUE_USER";
 
 fn main() {
     let subcommand = Subcommand::from_args();
-    dbg!(&subcommand);
 
     match subcommand {
         Subcommand::Init { username } => {
@@ -27,7 +27,10 @@ fn main() {
             let bridge = login();
             power(bridge, lights, false);
         }
-        Subcommand::Brightness { brightness, lights } => {}
+        Subcommand::Brightness { brightness, lights } => {
+            let bridge = login();
+            fn_brightness(bridge, lights, &brightness);
+        }
         Subcommand::Color { color, lights } => {}
         Subcommand::Scene { name } => {}
     };
@@ -55,7 +58,6 @@ fn init(username: &str) -> Result<(), huelib::Error> {
     loop {
         match huelib::bridge::register_user(ip, &username) {
             Ok(user) => {
-                dbg!(&user);
                 let xdg_dirs = BaseDirectories::with_prefix("hue").unwrap();
                 let username_path = xdg_dirs
                     .place_data_file("username")
@@ -116,15 +118,30 @@ fn login() -> Bridge {
     Bridge::new(ip, username)
 }
 
-fn power(bridge: Bridge, lights: Vec<String>, on: bool) {
-    let state_transform = huelib::resource::light::StateModifier::new().with_on(on);
+fn power(bridge: Bridge, lights: Vec<String>, power_state: bool) {
+    let state_transform = StateModifier::new().with_on(power_state);
+    apply_transform(bridge, lights, state_transform);
+}
+
+// TODO rename back to brightness and move the functions corresponding to commands to their own namespace
+fn fn_brightness(bridge: Bridge, lights: Vec<String>, brightness: &str) {
+    // TODO parse +/- prefix
+    let brightness = Adjust::Override(brightness.parse().expect("Failed to parse brightness."));
+    let state_transform = StateModifier::new()
+        .with_on(true)
+        .with_brightness(brightness);
+    apply_transform(bridge, lights, state_transform);
+}
+
+fn apply_transform(bridge: Bridge, lights: Vec<String>, state_transform: StateModifier) {
     if lights.is_empty() {
-        // turn all lights on
+        // apply transform to all lights
         let lights = bridge.get_all_lights().expect("Failed to get lights.");
         for light in lights {
-            bridge.set_light_state(light.id, &state_transform).unwrap();
+            dbg!(bridge.set_light_state(light.id, &state_transform).unwrap());
         }
     } else {
+        // apply transform only to specified lights
         unimplemented!()
     }
 }
