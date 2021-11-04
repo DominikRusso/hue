@@ -22,6 +22,9 @@ pub enum Subcommand {
     ///
     /// Sets the brightness of the specified lights. If no lights are specified
     /// it sets the brightness of all lights.
+    ///
+    /// To make relative brightness changes you can prefix the brightness value
+    /// with + or -.
     #[structopt(alias = "bri", settings = &[AppSettings::AllowNegativeNumbers])]
     Brightness {
         brightness: String,
