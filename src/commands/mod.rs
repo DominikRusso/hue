@@ -134,7 +134,7 @@ fn apply_transform(lights: Vec<String>, state_transform: light::StateModifier) {
         // apply transform to all lights
         let lights = bridge.get_all_lights().expect("Failed to get lights.");
         for light in lights {
-            dbg!(bridge.set_light_state(light.id, &state_transform).unwrap());
+            bridge.set_light_state(light.id, &state_transform).unwrap();
         }
     } else {
         // apply transform only to specified lights
