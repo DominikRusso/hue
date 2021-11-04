@@ -1,5 +1,5 @@
 use huelib::bridge::Bridge;
-use huelib::resource::{light::StateModifier, Adjust};
+use huelib::resource::{group, light, scene::Scene, Adjust};
 use std::env;
 use std::fs::{self, File};
 use std::net::IpAddr;
@@ -75,7 +75,7 @@ impl From<PowerState> for bool {
 }
 
 pub fn power(lights: Vec<String>, power_state: PowerState) {
-    let state_transform = StateModifier::new().with_on(power_state.into());
+    let state_transform = light::StateModifier::new().with_on(power_state.into());
     apply_transform(lights, state_transform);
 }
 
@@ -100,13 +100,35 @@ pub fn brightness(lights: Vec<String>, brightness: String) {
         _ => unreachable!(),
     };
 
-    let state_transform = StateModifier::new()
+    let state_transform = light::StateModifier::new()
         .with_on(true)
         .with_brightness(brightness_transform);
     apply_transform(lights, state_transform);
 }
 
-fn apply_transform(lights: Vec<String>, state_transform: StateModifier) {
+pub fn scene(name: String) {
+    let bridge = login();
+    let scenes = bridge.get_all_scenes().unwrap();
+    let filtered_scenes: Vec<&Scene> = scenes
+        .iter()
+        .filter(|sc| sc.name == name && sc.group.is_some())
+        .collect();
+    let target_scene = filtered_scenes
+        .first()
+        .expect("No scene with that name found.");
+    let group_id = target_scene
+        .group
+        .as_ref()
+        .expect("Bug: Filtered scenes should all have a group.");
+    let scene_id = &target_scene.id;
+
+    let state_transform = group::StateModifier::new()
+        .with_on(true)
+        .with_scene(scene_id.to_string());
+    bridge.set_group_state(group_id, &state_transform).unwrap();
+}
+
+fn apply_transform(lights: Vec<String>, state_transform: light::StateModifier) {
     let bridge = login();
     if lights.is_empty() {
         // apply transform to all lights

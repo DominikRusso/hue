@@ -24,6 +24,8 @@ fn main() {
             commands::brightness(lights, brightness);
         }
         Subcommand::Color { color, lights } => {}
-        Subcommand::Scene { name } => {}
+        Subcommand::Scene { name } => {
+            commands::scene(name);
+        }
     };
 }
