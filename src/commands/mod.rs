@@ -66,7 +66,7 @@ pub enum PowerState {
 }
 
 impl From<PowerState> for bool {
-    fn from(ps: PowerState) -> bool {
+    fn from(ps: PowerState) -> Self {
         match ps {
             PowerState::On => true,
             PowerState::Off => false,
@@ -80,15 +80,14 @@ pub fn power(lights: Vec<String>, power_state: PowerState) {
 }
 
 pub fn brightness(lights: Vec<String>, brightness: String) {
-    let prefix;
-    let value;
-    if brightness.starts_with("+") || brightness.starts_with("-") {
-        prefix = Some(brightness.chars().next().unwrap());
-        value = brightness[1..].to_string();
+    let (prefix, value) = if brightness.starts_with('+') || brightness.starts_with('-') {
+        (
+            Some(brightness.chars().next().unwrap()),
+            brightness[1..].to_string(),
+        )
     } else {
-        prefix = None;
-        value = brightness;
-    }
+        (None, brightness)
+    };
 
     let value = value.parse::<u8>().expect("Failed to parse brightness.");
     let value = ((value as f32 / 100.0) * 255.0) as u8;

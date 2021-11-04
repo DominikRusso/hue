@@ -23,7 +23,7 @@ fn main() {
         Subcommand::Brightness { brightness, lights } => {
             commands::brightness(lights, brightness);
         }
-        Subcommand::Color { color, lights } => {
+        Subcommand::Color { color: _, lights: _ } => {
             unimplemented!()
         }
         Subcommand::Scene { name } => {
