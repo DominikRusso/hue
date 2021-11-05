@@ -129,15 +129,31 @@ pub fn scene(name: String) {
 
 fn apply_transform(lights: Vec<String>, state_transform: light::StateModifier) {
     let bridge = login();
+    let all_lights = bridge.get_all_lights().expect("Failed to get lights.");
     if lights.is_empty() {
         // apply transform to all lights
-        let lights = bridge.get_all_lights().expect("Failed to get lights.");
-        for light in lights {
+        for light in all_lights {
             bridge.set_light_state(light.id, &state_transform).unwrap();
         }
     } else {
         // apply transform only to specified lights
-        unimplemented!()
+
+        // make sure the specified lights all exist
+        if !lights.iter().all(|input| {
+            all_lights
+                .iter()
+                .map(|a| a.name.clone())
+                .collect::<Vec<String>>()
+                .contains(&input)
+        }) {
+            // TODO
+            panic!("One of the input lights was not found.");
+        }
+        for light in all_lights {
+            if lights.contains(&light.name) {
+                bridge.set_light_state(light.id, &state_transform).unwrap();
+            }
+        }
     }
 }
 
@@ -170,3 +186,15 @@ fn login() -> Bridge {
 
     Bridge::new(ip, username)
 }
+
+// trait PositiveIntegers {
+//     fn are_all_positive_integers(&self) -> bool;
+// }
+
+// impl PositiveIntegers for Vec<String> {
+//     fn are_all_positive_integers(&self) -> bool {
+//         self.iter()
+//             .map(|string| string.parse::<u32>())
+//             .all(|r| r.is_ok())
+//     }
+// }

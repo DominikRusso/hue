@@ -45,13 +45,13 @@ If your bridge's IP address keeps changing on your network consider giving it a 
 After you have successfully paired you're ready to start controlling your lights.
 
 `hue on` turns all lights on. \
-`hue on <light-name>...` turns on the specified lights. **[Currently unimplemented]**
+`hue on <light-name>...` turns on the specified lights.
 
 `hue off` turns all lights off. \
-`hue off <light-name>...` turns off the specified lights. **[Currently unimplemented]**
+`hue off <light-name>...` turns off the specified lights.
 
 `hue brightness <value>` sets all the lights' brightness to `<value>`%. \
-`hue brightness <value> <light-name>...` sets the specified lights' brightness to `<value>`%. **[Currently unimplemented]** \
+`hue brightness <value> <light-name>...` sets the specified lights' brightness to `<value>`%. \
 You can prefix the `<value>` with either `+` or `-` to make the brightness change relative to the current brightness. \
 You can abbreviate brightness with bri.
 
