@@ -46,7 +46,7 @@ pub fn init(username: &str) -> Result<(), huelib::Error> {
             }
             Err(Error::Response(ResponseError { kind, .. })) if kind == LinkButtonNotPressed => {
                 if !info_msg_printed {
-                    println!("Press the bridge button!");
+                    println!("Press the bridge's link button!");
                 }
                 info_msg_printed = true;
                 std::thread::sleep(std::time::Duration::from_secs(2));

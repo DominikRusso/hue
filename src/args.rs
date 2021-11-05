@@ -2,6 +2,7 @@ use structopt::clap::AppSettings;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
+#[structopt(author)]
 pub enum Subcommand {
     /// For pairing with the hue bridge on the network
     Init { username: String },
