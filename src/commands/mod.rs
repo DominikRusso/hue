@@ -1,5 +1,8 @@
 use huelib::bridge::Bridge;
 use huelib::resource::{group, light, scene::Scene, Adjust};
+use huelib::response::Error as ResponseError;
+use huelib::response::ErrorKind::LinkButtonNotPressed;
+use huelib::Error;
 use std::env;
 use std::fs::{self, File};
 use std::net::IpAddr;
@@ -9,11 +12,6 @@ static ENV_IP: &str = "HUE_IP";
 static ENV_USER: &str = "HUE_USER";
 
 pub fn init(username: &str) -> Result<(), huelib::Error> {
-    // damn this library's api is ugly
-    use huelib::response::Error as ResponseError;
-    use huelib::response::ErrorKind::LinkButtonNotPressed;
-    use huelib::Error;
-
     let mut info_msg_printed = false;
 
     // check first if the user specified the IP and only then use
@@ -185,15 +183,3 @@ fn login() -> Bridge {
 
     Bridge::new(ip, username)
 }
-
-// trait PositiveIntegers {
-//     fn are_all_positive_integers(&self) -> bool;
-// }
-
-// impl PositiveIntegers for Vec<String> {
-//     fn are_all_positive_integers(&self) -> bool {
-//         self.iter()
-//             .map(|string| string.parse::<u32>())
-//             .all(|r| r.is_ok())
-//     }
-// }
