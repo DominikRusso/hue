@@ -142,9 +142,8 @@ fn apply_transform(lights: Vec<String>, state_transform: light::StateModifier) {
         if !lights.iter().all(|input| {
             all_lights
                 .iter()
-                .map(|a| a.name.clone())
-                .collect::<Vec<String>>()
-                .contains(&input)
+                .map(|a| &a.name)
+                .any(|light| light == input)
         }) {
             // TODO
             panic!("One of the input lights was not found.");
