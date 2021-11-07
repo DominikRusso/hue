@@ -103,6 +103,41 @@ pub fn brightness(lights: Vec<String>, brightness: String) {
     apply_transform(lights, state_transform);
 }
 
+pub fn color(color: String, lights: Vec<String>) {
+    let rbga = match pastel::parser::parse_color(&color) {
+        Some(c) => c.to_rgba(),
+        None => {
+            eprintln!("Color either not known or couldn't be parsed.");
+            return;
+        }
+    };
+
+    let gamma_correct = |v: f32| {
+        if v > 0.04045 {
+            ((v + 0.055) / (1.0 + 0.055)).powf(2.4)
+        } else {
+            v / 12.92
+        }
+    };
+
+    // TODO check if pastel does this already somewhere
+    let red = gamma_correct(rbga.r as f32 / 255.0);
+    let green = gamma_correct(rbga.g as f32 / 255.0);
+    let blue = gamma_correct(rbga.b as f32 / 255.0);
+    let x = red * 0.649_926 + green * 0.103_455 + blue * 0.197_109;
+    let y = red * 0.234_327 + green * 0.743_075 + blue * 0.022_598;
+    let z = red * 0.000_000 + green * 0.053_077 + blue * 1.035_763;
+    let color_space_coordinates = (
+        x / (x + y + z + std::f32::MIN_POSITIVE),
+        y / (x + y + z + std::f32::MIN_POSITIVE),
+    );
+
+    let state_transform = light::StateModifier::new()
+        .with_on(true)
+        .with_color_space_coordinates(Adjust::Override(color_space_coordinates));
+    apply_transform(lights, state_transform);
+}
+
 pub fn scene(name: String) {
     let bridge = login();
     let scenes = bridge.get_all_scenes().unwrap();

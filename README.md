@@ -52,13 +52,17 @@ After you have successfully paired you're ready to start controlling your lights
 
 `hue brightness <value>` sets all the lights' brightness to `<value>`%. \
 `hue brightness <value> <light-name>...` sets the specified lights' brightness to `<value>`%. \
-You can prefix the `<value>` with either `+` or `-` to make the brightness change relative to the current brightness. \
-You can abbreviate brightness with bri.
+You can abbreviate `brightness` with `bri`. \
+You can prefix the `<value>` with either `+` or `-` to make the brightness change relative to the current brightness.
 
-`hue color <color>` sets all the lights' color to `<color>` **[Currently unimplemented]** \
-`hue color <color> <light-name>...` sets the specified lights' color to `<color>` **[Currently unimplemented]** \
-`<color>` can be a CSS color name, a hex code or TODO (maybe a pastel color name?). \
-You can abbreviate color with col.
+`hue color <color>` sets all the lights' color to `<color>` \
+`hue color <color> <light-name>...` sets the specified lights' color to `<color>` \
+You can abbreviate `color` with `col`. \
+The value of `<color>` can be a
+* color name (`coral`)
+* a hex color code (`ff7f50` or `'#ff7f50'`)
+* an rgb triplet (`rgb(255, 127, 80)` or `255,127,80`)
+* or a hsl triplet (`hsl(16, 100.0%, 65.7%)`).
 
 `hue scene <scene-name>` sets the scene with the name `<scene-name>`. \
-You can use set instead of scene.
+You can use `set` instead of `scene`.
