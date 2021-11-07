@@ -22,7 +22,9 @@ pub enum Subcommand {
     /// For controlling lights' brightness
     ///
     /// Sets the brightness of the specified lights. If no lights are specified
-    /// it sets the brightness of all lights.
+    /// it sets the brightness of the lights that are on. If you want to turn
+    /// all the lights on and set their brightness in one command you can pass
+    /// `-a` or `--all`.
     ///
     /// To make relative brightness changes you can prefix the brightness value
     /// with + or -.
@@ -30,14 +32,23 @@ pub enum Subcommand {
     Brightness {
         brightness: String,
         lights: Vec<String>,
+        #[structopt(short, long, conflicts_with = "lights")]
+        all: bool,
     },
 
     /// For controlling lights' color
     ///
     /// Sets the color of the specified lights. If no lights are specified it
-    /// sets the color of all lights.
+    /// sets the color of the lights that are on. If you want to turn all the
+    /// lights on and set their color in one command you can pass `-a` or
+    /// `--all`.
     #[structopt(alias = "col")]
-    Color { color: String, lights: Vec<String> },
+    Color {
+        color: String,
+        lights: Vec<String>,
+        #[structopt(short, long, conflicts_with = "lights")]
+        all: bool,
+    },
 
     /// For setting scenes
     #[structopt(alias = "set")]

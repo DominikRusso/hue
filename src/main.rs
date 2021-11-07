@@ -20,11 +20,15 @@ fn main() {
         Subcommand::Off { lights } => {
             commands::power(lights, PowerState::Off);
         }
-        Subcommand::Brightness { brightness, lights } => {
-            commands::brightness(lights, brightness);
+        Subcommand::Brightness {
+            brightness,
+            lights,
+            all,
+        } => {
+            commands::brightness(lights, brightness, all);
         }
-        Subcommand::Color { color, lights } => {
-            commands::color(color, lights);
+        Subcommand::Color { color, lights, all } => {
+            commands::color(color, lights, all);
         }
         Subcommand::Scene { name } => {
             if let Err(e) = commands::scene(name) {

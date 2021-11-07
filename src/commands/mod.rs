@@ -73,12 +73,12 @@ impl From<PowerState> for bool {
 
 pub fn power(lights: Vec<String>, power_state: PowerState) {
     let state_transform = light::StateModifier::new().with_on(power_state.into());
-    if let Err(e) = apply_transform(lights, state_transform) {
+    if let Err(e) = apply_transform(lights, state_transform, true) {
         eprintln!("{}", e);
     };
 }
 
-pub fn brightness(lights: Vec<String>, brightness: String) {
+pub fn brightness(lights: Vec<String>, brightness: String, all: bool) {
     let (prefix, value) = if brightness.starts_with('+') || brightness.starts_with('-') {
         (
             Some(brightness.chars().next().unwrap()),
@@ -111,12 +111,12 @@ pub fn brightness(lights: Vec<String>, brightness: String) {
     let state_transform = light::StateModifier::new()
         .with_on(true)
         .with_brightness(brightness_transform);
-    if let Err(e) = apply_transform(lights, state_transform) {
+    if let Err(e) = apply_transform(lights, state_transform, all) {
         eprintln!("{}", e);
     };
 }
 
-pub fn color(color: String, lights: Vec<String>) {
+pub fn color(color: String, lights: Vec<String>, all: bool) {
     let color = match pastel::parser::parse_color(&color) {
         Some(c) => c,
         None => {
@@ -138,7 +138,7 @@ pub fn color(color: String, lights: Vec<String>) {
     let state_transform = light::StateModifier::new()
         .with_on(true)
         .with_color_space_coordinates(Adjust::Override(color_space_coordinates));
-    if let Err(e) = apply_transform(lights, state_transform) {
+    if let Err(e) = apply_transform(lights, state_transform, all) {
         eprintln!("{}", e);
     };
 }
@@ -170,13 +170,25 @@ pub fn scene(name: String) -> Result<(), String> {
 fn apply_transform(
     lights: Vec<String>,
     state_transform: light::StateModifier,
+    apply_to_all: bool,
 ) -> Result<(), String> {
     let bridge = login()?;
     let all_lights = bridge.get_all_lights().expect("Failed to get lights.");
     if lights.is_empty() {
-        // apply transform to all lights
-        for light in all_lights {
-            bridge.set_light_state(light.id, &state_transform).unwrap();
+        if apply_to_all {
+            // apply transform to all lights
+            for light in all_lights {
+                bridge.set_light_state(light.id, &state_transform).unwrap();
+            }
+        } else {
+            // apply to lights that are on
+            let active_lights: Vec<&light::Light> = all_lights
+                .iter()
+                .filter(|light| light.state.on.is_some() && light.state.on.unwrap())
+                .collect();
+            for light in active_lights {
+                bridge.set_light_state(&light.id, &state_transform).unwrap();
+            }
         }
     } else {
         // apply transform only to specified lights

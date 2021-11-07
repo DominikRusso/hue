@@ -50,13 +50,15 @@ After you have successfully paired you're ready to start controlling your lights
 `hue off` turns all lights off. \
 `hue off <light-name>...` turns off the specified lights.
 
-`hue brightness <value>` sets all the lights' brightness to `<value>`%. \
+`hue brightness <value>` sets all the active lights' brightness to `<value>`%. \
 `hue brightness <value> <light-name>...` sets the specified lights' brightness to `<value>`%. \
+If you didn't specify any lights you can pass `-a` or `--all` to turn all lights on and set their brightness in one command. \
 You can abbreviate `brightness` with `bri`. \
 You can prefix the `<value>` with either `+` or `-` to make the brightness change relative to the current brightness.
 
-`hue color <color>` sets all the lights' color to `<color>` \
+`hue color <color>` sets all the active lights' color to `<color>` \
 `hue color <color> <light-name>...` sets the specified lights' color to `<color>` \
+If you didn't specify any lights you can pass `-a` or `--all` to turn all lights on and set their color in one command. \
 You can abbreviate `color` with `col`. \
 The value of `<color>` can be a
 * color name (`coral`)
