@@ -61,8 +61,8 @@ You can abbreviate `color` with `col`. \
 The value of `<color>` can be a
 * color name (`coral`)
 * a hex color code (`ff7f50` or `'#ff7f50'`)
-* an rgb triplet (`rgb(255, 127, 80)` or `255,127,80`)
-* or a hsl triplet (`hsl(16, 100.0%, 65.7%)`).
+* an rgb triplet (`255,127,80` or `'rgb(255, 127, 80)'`)
+* or a hsl triplet (`'hsl(16, 100.0%, 65.7%)'`).
 
 `hue scene <scene-name>` sets the scene with the name `<scene-name>`. \
 You can use `set` instead of `scene`.
