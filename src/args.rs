@@ -32,8 +32,7 @@ pub enum Subcommand {
         lights: Vec<String>,
     },
 
-    // TODO
-    /// For controlling lights' color (unimplemented)
+    /// For controlling lights' color
     ///
     /// Sets the color of the specified lights. If no lights are specified it
     /// sets the color of all lights.
