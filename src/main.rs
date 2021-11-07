@@ -11,7 +11,7 @@ fn main() {
     match subcommand {
         Subcommand::Init { username } => {
             if let Err(e) = commands::init(&username) {
-                panic!("{}", e);
+                eprintln!("{}", e);
             }
         }
         Subcommand::On { lights } => {
@@ -27,7 +27,9 @@ fn main() {
             commands::color(color, lights);
         }
         Subcommand::Scene { name } => {
-            commands::scene(name);
+            if let Err(e) = commands::scene(name) {
+                eprintln!("{}", e);
+            }
         }
     };
 }

@@ -6,6 +6,7 @@ use huelib::Error;
 use std::env;
 use std::fs::{self, File};
 use std::net::IpAddr;
+use std::num;
 use xdg::BaseDirectories;
 
 static ENV_IP: &str = "HUE_IP";
@@ -49,9 +50,7 @@ pub fn init(username: &str) -> Result<(), huelib::Error> {
                 info_msg_printed = true;
                 std::thread::sleep(std::time::Duration::from_secs(2));
             }
-            Err(e) => {
-                panic!("{}", e);
-            }
+            Err(e) => return Err(e),
         }
     }
     println!("Successfully paired with the bridge.");
@@ -74,7 +73,9 @@ impl From<PowerState> for bool {
 
 pub fn power(lights: Vec<String>, power_state: PowerState) {
     let state_transform = light::StateModifier::new().with_on(power_state.into());
-    apply_transform(lights, state_transform);
+    if let Err(e) = apply_transform(lights, state_transform) {
+        eprintln!("{}", e);
+    };
 }
 
 pub fn brightness(lights: Vec<String>, brightness: String) {
@@ -87,7 +88,17 @@ pub fn brightness(lights: Vec<String>, brightness: String) {
         (None, brightness)
     };
 
-    let value = value.parse::<u8>().expect("Failed to parse brightness.");
+    let value = match value.parse::<u8>() {
+        Ok(v) => v,
+        Err(e) if e.kind() == &num::IntErrorKind::PosOverflow => {
+            eprintln!("The brightness value must be between 0 and 100.");
+            return;
+        }
+        Err(_) => {
+            eprintln!("The brightness value must be of the form `[+-]<int>`.");
+            return;
+        }
+    };
     let value = ((value as f32 / 100.0) * 255.0) as u8;
 
     let brightness_transform = match prefix {
@@ -100,14 +111,16 @@ pub fn brightness(lights: Vec<String>, brightness: String) {
     let state_transform = light::StateModifier::new()
         .with_on(true)
         .with_brightness(brightness_transform);
-    apply_transform(lights, state_transform);
+    if let Err(e) = apply_transform(lights, state_transform) {
+        eprintln!("{}", e);
+    };
 }
 
 pub fn color(color: String, lights: Vec<String>) {
     let color = match pastel::parser::parse_color(&color) {
         Some(c) => c,
         None => {
-            eprintln!("Color either not known or couldn't be parsed.");
+            eprintln!("Color couldn't be parsed.");
             return;
         }
     };
@@ -125,11 +138,13 @@ pub fn color(color: String, lights: Vec<String>) {
     let state_transform = light::StateModifier::new()
         .with_on(true)
         .with_color_space_coordinates(Adjust::Override(color_space_coordinates));
-    apply_transform(lights, state_transform);
+    if let Err(e) = apply_transform(lights, state_transform) {
+        eprintln!("{}", e);
+    };
 }
 
-pub fn scene(name: String) {
-    let bridge = login();
+pub fn scene(name: String) -> Result<(), String> {
+    let bridge = login()?;
     let scenes = bridge.get_all_scenes().unwrap();
     let filtered_scenes: Vec<&Scene> = scenes
         .iter()
@@ -137,7 +152,7 @@ pub fn scene(name: String) {
         .collect();
     let target_scene = filtered_scenes
         .first()
-        .expect("No scene with that name found.");
+        .ok_or("No scene with that name found.")?;
     let group_id = target_scene
         .group
         .as_ref()
@@ -148,10 +163,15 @@ pub fn scene(name: String) {
         .with_on(true)
         .with_scene(scene_id.to_string());
     bridge.set_group_state(group_id, &state_transform).unwrap();
+
+    Ok(())
 }
 
-fn apply_transform(lights: Vec<String>, state_transform: light::StateModifier) {
-    let bridge = login();
+fn apply_transform(
+    lights: Vec<String>,
+    state_transform: light::StateModifier,
+) -> Result<(), String> {
+    let bridge = login()?;
     let all_lights = bridge.get_all_lights().expect("Failed to get lights.");
     if lights.is_empty() {
         // apply transform to all lights
@@ -168,8 +188,7 @@ fn apply_transform(lights: Vec<String>, state_transform: light::StateModifier) {
                 .map(|a| &a.name)
                 .any(|light| light == input)
         }) {
-            // TODO
-            panic!("One of the input lights was not found.");
+            return Err("One of the specified lights was not found.".into());
         }
         for light in all_lights {
             if lights.contains(&light.name) {
@@ -177,22 +196,23 @@ fn apply_transform(lights: Vec<String>, state_transform: light::StateModifier) {
             }
         }
     }
+    Ok(())
 }
 
-fn login() -> Bridge {
+fn login() -> Result<Bridge, String> {
     let xdg_dirs = BaseDirectories::with_prefix("hue").unwrap();
     let ip = match env::var(ENV_IP) {
-        Ok(ip) => ip
-            .parse::<IpAddr>()
-            .expect("Failed to parse IP address on `HUE_IP` environment variable."),
+        Ok(ip) => ip.parse::<IpAddr>().or(Err(
+            "Failed to parse IP address on `HUE_IP` environment variable.",
+        ))?,
         Err(_) => {
             let bridge_path = xdg_dirs
                 .find_data_file("bridge")
-                .expect("Cannot find IP address of bridge in environment variable `HUE_IP` and the bridge file does not exist.");
+                .ok_or("Cannot find IP address of bridge in environment variable `HUE_IP` and the bridge file does not exist.")?;
             fs::read_to_string(bridge_path)
                 .unwrap()
                 .parse()
-                .expect("Failed to parse IP address in username data file.")
+                .or(Err("Failed to parse IP address in username data file."))?
         }
     };
 
@@ -201,10 +221,10 @@ fn login() -> Bridge {
         Err(_) => {
             let username_path = xdg_dirs
                 .find_data_file("username")
-                .expect("Cannot find username in environment variable `HUE_USER` and the username file does not exist.");
+                .ok_or("Cannot find username in environment variable `HUE_USER` and the username file does not exist.")?;
             fs::read_to_string(username_path).unwrap()
         }
     };
 
-    Bridge::new(ip, username)
+    Ok(Bridge::new(ip, username))
 }
