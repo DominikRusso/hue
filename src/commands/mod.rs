@@ -12,7 +12,7 @@ use xdg::BaseDirectories;
 static ENV_IP: &str = "HUE_IP";
 static ENV_USER: &str = "HUE_USER";
 
-pub fn init(username: &str) -> Result<(), huelib::Error> {
+pub fn init(username: &str) -> Result<(), Error> {
     let mut info_msg_printed = false;
 
     // check first if the user specified the IP and only then use
@@ -173,7 +173,7 @@ fn apply_transform(
     apply_to_all: bool,
 ) -> Result<(), String> {
     let bridge = login()?;
-    let all_lights = bridge.get_all_lights().expect("Failed to get lights.");
+    let all_lights = bridge.get_all_lights().or(Err("Failed to get lights."))?;
     if lights.is_empty() {
         if apply_to_all {
             // apply transform to all lights
@@ -215,7 +215,7 @@ fn login() -> Result<Bridge, String> {
     let xdg_dirs = BaseDirectories::with_prefix("hue").unwrap();
     let ip = match env::var(ENV_IP) {
         Ok(ip) => ip.parse::<IpAddr>().or(Err(
-            "Failed to parse IP address on `HUE_IP` environment variable.",
+            "Failed to parse IP address in `HUE_IP` environment variable.",
         ))?,
         Err(_) => {
             let bridge_path = xdg_dirs
@@ -238,5 +238,11 @@ fn login() -> Result<Bridge, String> {
         }
     };
 
-    Ok(Bridge::new(ip, username))
+    let bridge = Bridge::new(ip, username);
+    // check if the bridge is reachable before returning
+    match bridge.get_config() {
+        Ok(_) => Ok(bridge),
+        Err(Error::Request(_)) => Err("Are you and the bridge connected to the network?".into()),
+        Err(e) => panic!("Something unexpected went wrong: {:?}", e),
+    }
 }
