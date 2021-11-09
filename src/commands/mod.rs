@@ -220,11 +220,12 @@ fn login() -> Result<Bridge, String> {
         Err(_) => {
             let bridge_path = xdg_dirs
                 .find_data_file("bridge")
-                .ok_or("Cannot find IP address of bridge in environment variable `HUE_IP` and the bridge file does not exist.")?;
+                .ok_or("Cannot find IP address of bridge in environment variable `HUE_IP` and the bridge file does not exist either.")?;
             fs::read_to_string(bridge_path)
                 .unwrap()
+                .trim()
                 .parse()
-                .or(Err("Failed to parse IP address in username data file."))?
+                .or(Err("Failed to parse IP address in bridge data file."))?
         }
     };
 
@@ -233,7 +234,7 @@ fn login() -> Result<Bridge, String> {
         Err(_) => {
             let username_path = xdg_dirs
                 .find_data_file("username")
-                .ok_or("Cannot find username in environment variable `HUE_USER` and the username file does not exist.")?;
+                .ok_or("Cannot find username in environment variable `HUE_USER` and the username file does not exist either.")?;
             fs::read_to_string(username_path).unwrap()
         }
     };
@@ -243,6 +244,9 @@ fn login() -> Result<Bridge, String> {
     match bridge.get_config() {
         Ok(_) => Ok(bridge),
         Err(Error::Request(_)) => Err("Are you and the bridge connected to the network?".into()),
+        Err(Error::Response(e)) if e.kind == huelib::response::ErrorKind::UnauthorizedUser => {
+            Err("User is not authorized.".into())
+        }
         Err(e) => panic!("Something unexpected went wrong: {:?}", e),
     }
 }
