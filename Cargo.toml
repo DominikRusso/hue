@@ -6,7 +6,9 @@ license = "GPL-3.0-only"
 edition = "2021"
 rust-version = "1.56.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+lto = "fat"
+strip = "symbols"
 
 [dependencies]
 huelib = "0.13.2"
