@@ -10,6 +10,6 @@ rust-version = "1.56.0"
 
 [dependencies]
 huelib = "0.13.2"
-pastel = "0.8.1"
+pastel = "0.9.0"
 structopt = "0.3.25"
 xdg = "2.4.0"
