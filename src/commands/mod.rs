@@ -1,7 +1,9 @@
 use huelib::bridge::Bridge;
-use huelib::resource::{group, light, scene::Scene, Adjust};
-use huelib::response::Error as ResponseError;
-use huelib::response::ErrorKind::LinkButtonNotPressed;
+use huelib::resource::{
+    light::{Light, StateModifier},
+    scene::Scene,
+    Adjust,
+};
 use huelib::Error;
 use std::env;
 use std::fs::{self, File};
@@ -13,6 +15,9 @@ static ENV_IP: &str = "HUE_IP";
 static ENV_USER: &str = "HUE_USER";
 
 pub fn init(username: &str) -> Result<(), Error> {
+    use huelib::response::Error as ResponseError;
+    use huelib::response::ErrorKind::LinkButtonNotPressed;
+
     let mut info_msg_printed = false;
 
     // check first if the user specified the IP and only then use
@@ -72,7 +77,7 @@ impl From<PowerState> for bool {
 }
 
 pub fn power(lights: Vec<String>, power_state: PowerState) {
-    let state_transform = light::StateModifier::new().with_on(power_state.into());
+    let state_transform = StateModifier::new().with_on(power_state.into());
     if let Err(e) = apply_transform(lights, state_transform, true) {
         eprintln!("{}", e);
     };
@@ -108,7 +113,7 @@ pub fn brightness(lights: Vec<String>, brightness: String, all: bool) {
         _ => unreachable!(),
     };
 
-    let state_transform = light::StateModifier::new()
+    let state_transform = StateModifier::new()
         .with_on(true)
         .with_brightness(brightness_transform);
     if let Err(e) = apply_transform(lights, state_transform, all) {
@@ -135,7 +140,7 @@ pub fn color(color: String, lights: Vec<String>, all: bool) {
         y / (x + y + z + f32::MIN_POSITIVE),
     );
 
-    let state_transform = light::StateModifier::new()
+    let state_transform = StateModifier::new()
         .with_on(true)
         .with_color_space_coordinates(Adjust::Override(color_space_coordinates));
     if let Err(e) = apply_transform(lights, state_transform, all) {
@@ -159,7 +164,8 @@ pub fn scene(name: String) -> Result<(), String> {
         .expect("Bug: Filtered scenes should all have a group.");
     let scene_id = &target_scene.id;
 
-    let state_transform = group::StateModifier::new()
+    use huelib::resource::group::StateModifier;
+    let state_transform = StateModifier::new()
         .with_on(true)
         .with_scene(scene_id.to_string());
     bridge.set_group_state(group_id, &state_transform).unwrap();
@@ -169,7 +175,7 @@ pub fn scene(name: String) -> Result<(), String> {
 
 fn apply_transform(
     lights: Vec<String>,
-    state_transform: light::StateModifier,
+    state_transform: StateModifier,
     apply_to_all: bool,
 ) -> Result<(), String> {
     let bridge = login()?;
@@ -182,7 +188,7 @@ fn apply_transform(
             }
         } else {
             // apply to lights that are on
-            let active_lights: Vec<&light::Light> = all_lights
+            let active_lights: Vec<&Light> = all_lights
                 .iter()
                 .filter(|light| light.state.on.is_some() && light.state.on.unwrap())
                 .collect();
