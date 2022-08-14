@@ -21,7 +21,7 @@ pub fn init(username: &str) -> Result<(), Error> {
     let mut info_msg_printed = false;
 
     // check first if the user specified the IP and only then use
-    // `discover_nupnp` which connects to Philip's severs
+    // `discover_nupnp` which connects to Philips' severs
     // NOTE: I wonder if something like avahi could be used instead
     let ip = match env::var(ENV_IP) {
         Ok(ip) => ip.parse::<IpAddr>().unwrap(),
