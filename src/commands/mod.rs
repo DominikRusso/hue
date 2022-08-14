@@ -32,6 +32,7 @@ pub fn init(username: &str) -> Result<(), Error> {
 
     // loop until bridge button has been pressed
     loop {
+        use std::io::Write;
         match huelib::bridge::register_user(ip, &username) {
             Ok(user) => {
                 let xdg_dirs = BaseDirectories::with_prefix("hue").unwrap();
@@ -43,7 +44,6 @@ pub fn init(username: &str) -> Result<(), Error> {
                     .expect("Couldn't create data directory.");
                 let mut username_file = File::create(username_path)?;
                 let mut bridge_file = File::create(bridge_path)?;
-                use std::io::Write;
                 write!(username_file, "{}", user).unwrap();
                 write!(bridge_file, "{}", ip).unwrap();
                 break;
@@ -76,14 +76,14 @@ impl From<PowerState> for bool {
     }
 }
 
-pub fn power(lights: Vec<String>, power_state: PowerState) {
+pub fn power(lights: &[String], power_state: PowerState) {
     let state_transform = StateModifier::new().with_on(power_state.into());
-    if let Err(e) = apply_transform(lights, state_transform, true) {
+    if let Err(e) = apply_transform(lights, &state_transform, true) {
         eprintln!("{}", e);
     };
 }
 
-pub fn brightness(lights: Vec<String>, brightness: String, all: bool) {
+pub fn brightness(lights: &[String], brightness: String, all: bool) {
     let (prefix, value) = if brightness.starts_with('+') || brightness.starts_with('-') {
         (
             Some(brightness.chars().next().unwrap()),
@@ -116,13 +116,13 @@ pub fn brightness(lights: Vec<String>, brightness: String, all: bool) {
     let state_transform = StateModifier::new()
         .with_on(true)
         .with_brightness(brightness_transform);
-    if let Err(e) = apply_transform(lights, state_transform, all) {
+    if let Err(e) = apply_transform(lights, &state_transform, all) {
         eprintln!("{}", e);
     };
 }
 
-pub fn color(color: String, lights: Vec<String>, all: bool) {
-    let color = match pastel::parser::parse_color(&color) {
+pub fn color(color: &str, lights: &[String], all: bool) {
+    let color = match pastel::parser::parse_color(color) {
         Some(c) => c,
         None => {
             eprintln!("Color couldn't be parsed.");
@@ -143,12 +143,14 @@ pub fn color(color: String, lights: Vec<String>, all: bool) {
     let state_transform = StateModifier::new()
         .with_on(true)
         .with_color_space_coordinates(Adjust::Override(color_space_coordinates));
-    if let Err(e) = apply_transform(lights, state_transform, all) {
+    if let Err(e) = apply_transform(lights, &state_transform, all) {
         eprintln!("{}", e);
     };
 }
 
-pub fn scene(name: String) -> Result<(), String> {
+pub fn scene(name: &str) -> Result<(), String> {
+    use huelib::resource::group::StateModifier;
+
     let bridge = login()?;
     let scenes = bridge.get_all_scenes().unwrap();
     let filtered_scenes: Vec<&Scene> = scenes
@@ -164,7 +166,6 @@ pub fn scene(name: String) -> Result<(), String> {
         .expect("Bug: Filtered scenes should all have a group.");
     let scene_id = &target_scene.id;
 
-    use huelib::resource::group::StateModifier;
     let state_transform = StateModifier::new()
         .with_on(true)
         .with_scene(scene_id.to_string());
@@ -174,8 +175,8 @@ pub fn scene(name: String) -> Result<(), String> {
 }
 
 fn apply_transform(
-    lights: Vec<String>,
-    state_transform: StateModifier,
+    lights: &[String],
+    state_transform: &StateModifier,
     apply_to_all: bool,
 ) -> Result<(), String> {
     let bridge = login()?;
@@ -184,7 +185,7 @@ fn apply_transform(
         if apply_to_all {
             // apply transform to all lights
             for light in all_lights {
-                bridge.set_light_state(light.id, &state_transform).unwrap();
+                bridge.set_light_state(light.id, state_transform).unwrap();
             }
         } else {
             // apply to lights that are on
@@ -193,7 +194,7 @@ fn apply_transform(
                 .filter(|light| light.state.on.is_some() && light.state.on.unwrap())
                 .collect();
             for light in active_lights {
-                bridge.set_light_state(&light.id, &state_transform).unwrap();
+                bridge.set_light_state(&light.id, state_transform).unwrap();
             }
         }
     } else {
@@ -210,7 +211,7 @@ fn apply_transform(
         }
         for light in all_lights {
             if lights.contains(&light.name) {
-                bridge.set_light_state(light.id, &state_transform).unwrap();
+                bridge.set_light_state(light.id, state_transform).unwrap();
             }
         }
     }
