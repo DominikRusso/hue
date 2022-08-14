@@ -104,7 +104,7 @@ pub fn brightness(lights: &[String], brightness: String, all: bool) {
             return;
         }
     };
-    let value = ((value as f32 / 100.0) * 255.0) as u8;
+    let value = ((f32::from(value) / 100.0) * 255.0) as u8;
 
     let brightness_transform = match prefix {
         Some('+') => Adjust::Increment(value),
@@ -130,14 +130,12 @@ pub fn color(color: &str, lights: &[String], all: bool) {
         }
     };
 
-    let cie_xyz = color.to_xyz();
-    let x = cie_xyz.x as f32;
-    let y = cie_xyz.y as f32;
-    let z = cie_xyz.z as f32;
+    // hue wants CIE XY coordinates
+    let xyz = color.to_xyz();
     // https://en.wikipedia.org/wiki/CIE_1931_color_space
     let color_space_coordinates = (
-        x / (x + y + z + f32::MIN_POSITIVE),
-        y / (x + y + z + f32::MIN_POSITIVE),
+        (xyz.x / (xyz.x + xyz.y + xyz.z + f64::MIN_POSITIVE)) as f32,
+        (xyz.y / (xyz.x + xyz.y + xyz.z + f64::MIN_POSITIVE)) as f32,
     );
 
     let state_transform = StateModifier::new()
