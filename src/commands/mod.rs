@@ -219,30 +219,28 @@ fn apply_transform(
 
 fn login() -> Result<Bridge, String> {
     let xdg_dirs = BaseDirectories::with_prefix("hue").unwrap();
-    let ip = match env::var(ENV_IP) {
-        Ok(ip) => ip.parse::<IpAddr>().or(Err(
+    let ip = if let Ok(ip) = env::var(ENV_IP) {
+        ip.parse::<IpAddr>().or(Err(
             "Failed to parse IP address in `HUE_IP` environment variable.",
-        ))?,
-        Err(_) => {
-            let bridge_path = xdg_dirs
-                .find_data_file("bridge")
-                .ok_or("Cannot find IP address of bridge in environment variable `HUE_IP` and the bridge file does not exist either.")?;
-            fs::read_to_string(bridge_path)
-                .unwrap()
-                .trim()
-                .parse()
-                .or(Err("Failed to parse IP address in bridge data file."))?
-        }
+        ))?
+    } else {
+        let bridge_path = xdg_dirs
+             .find_data_file("bridge")
+             .ok_or("Cannot find IP address of bridge in environment variable `HUE_IP` and the bridge file does not exist either.")?;
+        fs::read_to_string(bridge_path)
+            .unwrap()
+            .trim()
+            .parse()
+            .or(Err("Failed to parse IP address in bridge data file."))?
     };
 
-    let username = match env::var(ENV_USER) {
-        Ok(user) => user,
-        Err(_) => {
-            let username_path = xdg_dirs
-                .find_data_file("username")
-                .ok_or("Cannot find username in environment variable `HUE_USER` and the username file does not exist either.")?;
-            fs::read_to_string(username_path).unwrap()
-        }
+    let username = if let Ok(user) = env::var(ENV_USER) {
+        user
+    } else {
+        let username_path = xdg_dirs
+            .find_data_file("username")
+            .ok_or("Cannot find username in environment variable `HUE_USER` and the username file does not exist either.")?;
+        fs::read_to_string(username_path).unwrap()
     };
 
     let bridge = Bridge::new(ip, username);
