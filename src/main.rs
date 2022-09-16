@@ -25,7 +25,7 @@ fn main() {
             lights,
             all,
         } => {
-            commands::brightness(&lights, brightness, all);
+            commands::brightness(&lights, &brightness, all);
         }
         Subcommand::Color { color, lights, all } => {
             commands::color(&color, &lights, all);

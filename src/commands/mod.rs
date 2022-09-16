@@ -83,12 +83,9 @@ pub fn power(lights: &[String], power_state: PowerState) {
     };
 }
 
-pub fn brightness(lights: &[String], brightness: String, all: bool) {
+pub fn brightness(lights: &[String], brightness: &str, all: bool) {
     let (prefix, value) = if brightness.starts_with('+') || brightness.starts_with('-') {
-        (
-            Some(brightness.chars().next().unwrap()),
-            brightness[1..].to_string(),
-        )
+        (Some(brightness.chars().next().unwrap()), &brightness[1..])
     } else {
         (None, brightness)
     };
