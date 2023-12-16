@@ -33,7 +33,7 @@ pub fn init(username: &str) -> Result<(), Error> {
     // loop until bridge button has been pressed
     loop {
         use std::io::Write;
-        match huelib::bridge::register_user(ip, &username) {
+        match huelib::bridge::register_user(ip, username) {
             Ok(user) => {
                 let xdg_dirs = BaseDirectories::with_prefix("hue").unwrap();
                 let username_path = xdg_dirs
@@ -48,7 +48,10 @@ pub fn init(username: &str) -> Result<(), Error> {
                 write!(bridge_file, "{}", ip).unwrap();
                 break;
             }
-            Err(Error::Response(ResponseError { kind, .. })) if kind == LinkButtonNotPressed => {
+            Err(Error::Response(ResponseError {
+                kind: LinkButtonNotPressed,
+                ..
+            })) => {
                 if !info_msg_printed {
                     println!("Press the bridge's link button!");
                 }
